@@ -2,17 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class game-controller : MonoBehaviour
-{
+public class GameController : MonoBehaviour {
+    
+
+    public GameObject uiPrefab;
+
     // Start is called before the first frame update
-    void Start()
-    {
-        
+    void Start() {
+        GameObject.Instantiate(uiPrefab);
     }
 
     // Update is called once per frame
-    void Update()
-    {
+    void Update() {
         
     }
 }
