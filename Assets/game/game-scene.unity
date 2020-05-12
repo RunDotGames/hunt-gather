@@ -197,12 +197,42 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 844006074}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &728851358
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 728851359}
+  m_Layer: 0
+  m_Name: village-center
+  m_TagString: Untagged
+  m_Icon: {fileID: -5442936267250999957, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &728851359
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 728851358}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.19, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 844006074}
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &844006072
 GameObject:
@@ -214,6 +244,10 @@ GameObject:
   m_Component:
   - component: {fileID: 844006074}
   - component: {fileID: 844006073}
+  - component: {fileID: 844006075}
+  - component: {fileID: 844006076}
+  - component: {fileID: 844006078}
+  - component: {fileID: 844006077}
   m_Layer: 0
   m_Name: game-controller
   m_TagString: Untagged
@@ -233,8 +267,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26a1b4e7d50f6b544baa2290c347abf5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uiPrefab: {fileID: 6158646137271456739, guid: 37511fb5c3348484ca2f49289e885dcf,
-    type: 3}
+  prefabs:
+    ui: {fileID: 6158646137271456739, guid: 37511fb5c3348484ca2f49289e885dcf, type: 3}
 --- !u!4 &844006074
 Transform:
   m_ObjectHideFlags: 0
@@ -243,9 +277,125 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 844006072}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
+  m_Children:
+  - {fileID: 519420032}
+  - {fileID: 728851359}
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &844006075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 844006072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cecc7733177ee874fa99a88119650570, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  max: 10
+--- !u!114 &844006076
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 844006072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1c05bb509b2f1240b51b64622299718, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  config:
+    treePrefab: {fileID: 7274630743048048265, guid: 4f5e59382feabb54ea690c72705bb080,
+      type: 3}
+    deadZoneSize: 1.5
+    treeMinDistance: 0.3
+    treeMaxCount: 100
+    treeMinCount: 90
+    maxRetries: 300
+    xMargin: 30
+    yMargin: 70
+    startingFruitPercent: 0.2
+    fruitFood: 15
+  treeConfig:
+    minReFruit: 30
+    maxReFruit: 200
+--- !u!114 &844006077
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 844006072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d335d570b45de3247b3d0841e1456742, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  config:
+    initialDelay:
+      min: 0
+      max: 0
+    spawnDelay:
+      min: 900
+      max: 900
+    prefab: {fileID: 6177736041431907253, guid: 0c3d6a8d657890f47b2c11fec0dd0064,
+      type: 3}
+    spawnOutset: 100
+    attackPace: 1.7
+    prowlPace: 0.5
+    arrivalDistance: 0.2
+    attackDistance: 0.2
+    idleTime:
+      min: 3
+      max: 6
+    spotDistance: 1.2
+--- !u!114 &844006078
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 844006072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2507afdff91cb0741be20af5892d48a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  villageCenter: {fileID: 728851359}
+  villageConfig:
+    startingAllocations:
+    - type: 0
+      count: 5
+    - type: 1
+      count: 0
+    - type: 2
+      count: 0
+    startingStorage: 50
+    prefab: {fileID: 1105513266869155717, guid: 0736323c68f1d524c8e3492c5e18182e,
+      type: 3}
+    hutRadius: 2
+    hutCapacity: 100
+    feedAmount: 1
+  villagerConfig:
+    prefab: {fileID: 797220966460286950, guid: 60c6568a126c49d428b2b1fe7ce8833d, type: 3}
+    speed: 1.2
+    arrivalDistance: 0.2
+    attackDistance: 0.5
+    gatherTime: 2
+    restRange:
+      min: 4
+      max: 5
+    hungerRange:
+      min: 3
+      max: 3
+    attackPace: 1.2
+    prowlPace: 0.3
+    spotDistance: 1
+    gatherColor: {r: 0, g: 0.990566, b: 0.16695991, a: 1}
+    hunterColor: {r: 0.3215112, g: 0.39048043, b: 0.8018868, a: 1}

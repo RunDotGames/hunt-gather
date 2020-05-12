@@ -4,34 +4,91 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Linq;
+using System;
 
 public class AllocSlider : UIBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler {
 
-    [SerializeField] private GameObject[] handles;
     [SerializeField] private int count = 10;
-
+    [SerializeField] private GameObject[] handles;
+    [SerializeField] private GameObject[] labels;
+    [SerializeField] private int[] handlePositions;
     private RectTransform myTransform;
     private GameObject targetHandle;
-    private GameObject leftHandle;
-    private GameObject rightHandle;
+    private int targetHandleIndex;
+    private int[] allocations;
+
+    private bool isDragCancel;
+
+    public event Action<int[], int> OnChange;
 
     protected override void Start() {
         base.Start();
         myTransform = GetComponent<RectTransform>();
+        Array.Sort(handlePositions);
+        allocations = new int[handlePositions.Length+1];
+        UpdateForPositions();
     }
 
-    public void OnDrag(PointerEventData eventData)
-    {
-        var targetRect = targetHandle.GetComponent<RectTransform>();
-        var leftBound = (leftHandle?.GetComponent<RectTransform>().position.x ?? myTransform.position.x-targetRect.rect.width) + targetRect.rect.width;
-        var rightBound = (rightHandle?.GetComponent<RectTransform>().position.x ?? myTransform.rect.width+targetRect.rect.width) - targetRect.rect.width;
-        
-        var xPos = Mathf.Max(leftBound, Mathf.Min(eventData.position.x, rightBound));
-        targetRect.position = new Vector3(xPos, targetRect.position.y, targetRect.position.z);
+    private void UpdateForPositions(){
+        var increment = myTransform.rect.width / count;
+        var left = myTransform.position.x;
+        var handleWidth = handles[0].GetComponent<RectTransform>().rect.width;
+        handlePositions.Select((position, index) => {
+            var prevPosition = index > 0 ? handlePositions[index-1] : -1;
+            var nextPosition = index < handlePositions.Length-1 ? handlePositions[index+1] : count+1;
+            var  transform = handles[index].GetComponent<RectTransform>();
+            var xPos = position * increment + left;
+            if(prevPosition == position){
+                xPos = xPos + handleWidth * 0.5f;
+            }
+            if(nextPosition == position) {
+                xPos = xPos - handleWidth * 0.5f;
+            }
+            transform.position = new Vector3(xPos, transform.position.y, transform.position.z);
+            return 0;
+        }).ToArray();
+        for(var i = 0; i < allocations.Length; i++){
+            allocations[i] = (i == handlePositions.Length ? count : handlePositions[i]) - ((i == 0) ? 0 : handlePositions[i-1]);
+            var end = i == handlePositions.Length ? myTransform.rect.width : handles[i].GetComponent<RectTransform>().position.x;
+            var start = (i == 0) ? 0 : handles[i-1].GetComponent<RectTransform>().position.x;
+            var labelX = start +  (end - start)/2;
+            labels[i].transform.position = new Vector3(labelX, labels[i].transform.position.y, labels[i].transform.position.z);
+            labels[i].GetComponent<Text>().text = allocations[i].ToString();
+        }
     }
 
-    public void OnBeginDrag(PointerEventData eventData)
-    {
+    public void OnDrag(PointerEventData eventData){
+        if(isDragCancel){
+            return;
+        }
+        var min = targetHandleIndex > 0 ? handlePositions[targetHandleIndex-1] : 0;
+        var max = targetHandleIndex < handles.Length-1 ? handlePositions[targetHandleIndex+1] : count;
+        var dragTarget = Mathf.RoundToInt( (eventData.position.x - myTransform.position.x) / (myTransform.rect.width / count));
+        var boundedDrag = Math.Max(min, Math.Min(max, dragTarget));
+        if(handlePositions[targetHandleIndex] != boundedDrag){
+            handlePositions[targetHandleIndex] = boundedDrag;
+            UpdateForPositions();
+        }
+    }
+
+    public void SetState(int[] positions, int count){
+        if(handlePositions.Length != positions.Length || count == 0){
+            return;
+        }
+        isDragCancel = true;
+        this.count = count;
+        this.handlePositions = positions.Aggregate(new List<int>(), (result, item) => {
+            result.Add(Math.Max(Math.Min(item, count), 0));
+            return result;
+        }).ToArray();
+        if(myTransform == null){
+            return;
+        }
+        UpdateForPositions();
+    }
+
+    public void OnBeginDrag(PointerEventData eventData) {
+        isDragCancel = false;
         targetHandle = handles.Aggregate(null as GameObject, (result, item) => {
             if(result == null){
                 return item;
@@ -43,64 +100,14 @@ public class AllocSlider : UIBehaviour, IDragHandler, IBeginDragHandler, IEndDra
             }
             return result;
         });
-        
-        var targetX = targetHandle.GetComponent<RectTransform>().position.x;
-        var boundHandles = handles.Aggregate( new GameObject[2], (result, item) => {
-            if(item == targetHandle){
-                return result;
-            }
-            
-            var handleX = item.GetComponent<RectTransform>().position.x;
-            if(handleX < targetX){
-                if(result[0] == null){
-                    result[0] = item;
-                    return result;
-                }
-                if(result[0].GetComponent<RectTransform>().position.x < handleX){
-                    result[0] = item;
-                    return result;
-                }
-                return result;
-            }
-            if(result[1] == null){
-                result[1] = item;
-                return result;
-            }
-            if(result[1].GetComponent<RectTransform>().position.x > handleX){
-                result[1] = item;
-                return result;
-            }
-            return result;
-        });
-        leftHandle = boundHandles[0];
-        rightHandle = boundHandles[1];
+        targetHandleIndex = Array.IndexOf(handles, targetHandle);
     }
 
-    public void OnEndDrag(PointerEventData eventData)
-    {
-        var handleWidth =targetHandle.GetComponent<RectTransform>().rect.width;
-        var totalWidth = myTransform.rect.width - handleWidth * 0.5f * handles.Length;
-        var positions = handles.Select((handle) => {
-            var transform = handle.GetComponent<RectTransform>();
-            return transform.position.x;
-        }).Concat(new float[] {myTransform.rect.width}).ToArray();
-        var values =positions.Select((position, index)=>{
-            var start = handleWidth;
-            if(index == positions.Length-1){
-                start = positions[index -1];
-            } else if(index > 0) {
-                start = positions[index - 1] + handleWidth;
-            }
-            var precent = (position - start) / totalWidth;
-            Debug.Log(position + "-" + precent);
-            return Mathf.FloorToInt(precent* (float)count);
-        }).ToArray();
-        var total = values.Aggregate(0, (agg, current) => agg + current);
-        for(int i = 0; i < count - total; i++){
-            values[i] = values[i] + 1;
+    public void OnEndDrag(PointerEventData eventData) {
+        if(isDragCancel){
+            return;
         }
-        Debug.Log(values.Aggregate("", (agg, current) => agg + ", " + current));
+        OnChange?.Invoke(handlePositions, count);
 
-        
     }
 }
