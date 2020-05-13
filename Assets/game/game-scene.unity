@@ -248,6 +248,7 @@ GameObject:
   - component: {fileID: 844006076}
   - component: {fileID: 844006078}
   - component: {fileID: 844006077}
+  - component: {fileID: 844006079}
   m_Layer: 0
   m_Name: game-controller
   m_TagString: Untagged
@@ -315,16 +316,18 @@ MonoBehaviour:
       type: 3}
     deadZoneSize: 1.5
     treeMinDistance: 0.3
-    treeMaxCount: 100
-    treeMinCount: 90
+    treeRange:
+      min: 90
+      max: 100
     maxRetries: 300
     xMargin: 30
     yMargin: 70
-    startingFruitPercent: 0.2
-    fruitFood: 15
+    startingFruitPercent: 0.33
+    fruitFood: 10
   treeConfig:
-    minReFruit: 30
-    maxReFruit: 200
+    fruitRange:
+      min: 50
+      max: 500
 --- !u!114 &844006077
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -339,22 +342,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   config:
     initialDelay:
-      min: 0
-      max: 0
+      min: 10
+      max: 15
     spawnDelay:
-      min: 900
-      max: 900
+      min: 20
+      max: 30
     prefab: {fileID: 6177736041431907253, guid: 0c3d6a8d657890f47b2c11fec0dd0064,
       type: 3}
     spawnOutset: 100
     attackPace: 1.7
-    prowlPace: 0.5
+    prowlPace: 0.35
     arrivalDistance: 0.2
     attackDistance: 0.2
     idleTime:
       min: 3
       max: 6
-    spotDistance: 1.2
+    spotDistance: 1.5
 --- !u!114 &844006078
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -371,9 +374,9 @@ MonoBehaviour:
   villageConfig:
     startingAllocations:
     - type: 0
-      count: 5
+      count: 4
     - type: 1
-      count: 0
+      count: 1
     - type: 2
       count: 0
     startingStorage: 50
@@ -381,10 +384,10 @@ MonoBehaviour:
       type: 3}
     hutRadius: 2
     hutCapacity: 100
-    feedAmount: 1
+    feedAmount: 2
   villagerConfig:
     prefab: {fileID: 797220966460286950, guid: 60c6568a126c49d428b2b1fe7ce8833d, type: 3}
-    speed: 1.2
+    speed: 0.8
     arrivalDistance: 0.2
     attackDistance: 0.5
     gatherTime: 2
@@ -394,8 +397,31 @@ MonoBehaviour:
     hungerRange:
       min: 3
       max: 3
+    workRange:
+      min: 1
+      max: 2
     attackPace: 1.2
     prowlPace: 0.3
-    spotDistance: 1
-    gatherColor: {r: 0, g: 0.990566, b: 0.16695991, a: 1}
-    hunterColor: {r: 0.3215112, g: 0.39048043, b: 0.8018868, a: 1}
+    spotDistance: 1.5
+    gatherColor: {r: 0.21782663, g: 0.8396226, b: 0.43381378, a: 1}
+    hunterColor: {r: 0.7169812, g: 0.3726469, b: 0.29423285, a: 1}
+    builderColor: {r: 0.2236116, g: 0.38447228, b: 0.7075472, a: 1}
+--- !u!114 &844006079
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 844006072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be650473d926ce14ea24040a7c8e03b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  config:
+    prefab: {fileID: 3013735605486500610, guid: 377673d583d9ccf4a8b23e1ea16a054b,
+      type: 3}
+    projectRadius: 0.7
+  projectConfig:
+    totalWork: 100
+    workIncrement: 25

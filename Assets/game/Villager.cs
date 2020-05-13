@@ -23,6 +23,7 @@ public class Villager : MonoBehaviour, CombatTarget {
   public void Init(VillagerConfig config, OnHunger onHunger, VillagerType type, Func<Vector2, CombatTarget> targetProvider){
     colorMap[VillagerType.Gatherer] = config.gatherColor;
     colorMap[VillagerType.Hunter] = config.hunterColor;
+    colorMap[VillagerType.Builder] = config.builderColor;
     sprite.color = colorMap[type];
     this.type = type;
     this.config = config;
@@ -44,8 +45,14 @@ public class Villager : MonoBehaviour, CombatTarget {
       transform = this.transform,
       targetProvider = targetProvider,
       attackDistance = config.attackDistance,
-
     }, "villager");
+    agents[VillagerType.Builder] = new BuilderAgent(new BuilderConfig(){
+      arrivalDistance = config.arrivalDistance,
+      restRange = config.restRange,
+      transform = transform,
+      walkSpeed = config.speed,
+      workRange = config.workRange,
+    });
     UpdateHunger(false);
   }
 

@@ -39,7 +39,7 @@ public class Tree : MonoBehaviour {
   }
 
   private void PopNextFruitTime(){
-    nextFruitTime = Time.time + UnityEngine.Random.Range(config.minReFruit, config.maxReFruit);
+    nextFruitTime = Time.time + config.fruitRange.GetRangeValue();
   }
 
   public void Update(){

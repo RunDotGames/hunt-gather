@@ -8,8 +8,7 @@ public class ForestConfig {
     public GameObject treePrefab;
     public float deadZoneSize;
     public float treeMinDistance;
-    public int treeMaxCount;
-    public int treeMinCount;
+    public RandomIntRange treeRange;
     public int maxRetries;
     public float xMargin;
     public float yMargin;
@@ -19,8 +18,7 @@ public class ForestConfig {
 
 [Serializable]
 public class TreeConfig {
-    public float minReFruit;
-    public float maxReFruit;
+    public RandomFloatRange fruitRange;
 }
 
 public class ForestController : MonoBehaviour {
@@ -33,7 +31,7 @@ public class ForestController : MonoBehaviour {
   public TreeConfig treeConfig;
 
   public void SpawnForest(Vector3 deadZone){
-        var targetCount = UnityEngine.Random.Range(config.treeMinCount, config.treeMaxCount);
+        var targetCount = config.treeRange.GetRangeValue();
         var hutPosition = new Vector2(deadZone.x, deadZone.y);
         var retries = 0;
         while(forest.Count < targetCount){
@@ -78,7 +76,7 @@ public class ForestController : MonoBehaviour {
         }
     }
 
-    public Tree GetNearestFruitTree(Vector2 from){
+    public Tree GetNearestFruitTreeTarget(Vector2 from){
         var nearest = DistanceUtility.GetNearest(from, fruitTrees);
         if(nearest == null){
             return null;
@@ -86,6 +84,10 @@ public class ForestController : MonoBehaviour {
         fruitTrees.Remove(nearest);
         targetedTrees.Add(nearest);
         return nearest;
+    }
+
+    public Tree GetNearestTree(Vector2 from){
+        return DistanceUtility.GetNearest(from, forest);
     }
 
     public void ReleaseTarget(Tree targeted){

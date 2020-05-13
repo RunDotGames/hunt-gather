@@ -30,7 +30,7 @@ public class GathererAgent: Agent {
   private float nextActionTime;
   private int carrying;
 
-  private GathererState state = GathererState.Idle;
+  private GathererState state;
   private Dictionary<GathererState, AgentUpdate> updates = new Dictionary<GathererState, AgentUpdate>();
   private ForestController forest;
   private VillageController village;
@@ -46,6 +46,7 @@ public class GathererAgent: Agent {
     updates[GathererState.GatherFood] = UpdateGatherFood;
     updates[GathererState.GoToHut] = UpdateGoToHut;
     updates[GathererState.Rest] = UpdateRest;
+    ReturnToRest();
   }
 
   public void Update(){
@@ -53,7 +54,7 @@ public class GathererAgent: Agent {
   }
 
   private void UpdateIdle(){
-    target = forest.GetNearestFruitTree(config.transform.position);
+    target = forest.GetNearestFruitTreeTarget(config.transform.position);
     if(target != null && !village.IsStorageFull()){
       state = GathererState.GoToFood;
     }

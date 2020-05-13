@@ -11,12 +11,14 @@ public class VillagerConfig {
   public float attackDistance;
   public float gatherTime;
   public RandomFloatRange restRange;
-  public RandomIntRange hungerRange;
+  public RandomFloatRange hungerRange;
+  public RandomIntRange workRange;
   public float attackPace;
   public float prowlPace;
   public float spotDistance;
   public Color gatherColor;
   public Color hunterColor;
+  public Color builderColor;
 }
 
 [Serializable]
@@ -47,7 +49,8 @@ public class VillageController: MonoBehaviour {
   public Transform villageCenter;
   public VillageConfig villageConfig;
   public VillagerConfig villagerConfig;
-  private VillageHut hut;
+  private VillageHut primaryHut;
+  private List<VillageHut> huts = new List<VillageHut>();
   private List<Villager> villagers = new List<Villager>();
   private Dictionary<VillagerType, List<Villager>> villagersByType;
 
@@ -60,13 +63,13 @@ public class VillageController: MonoBehaviour {
   
   public void SpawnVillage(){
     var predatorController = GameObject.FindObjectOfType<PredatorController>();
-    SpawnHut();
+    primaryHut = SpawnHut(villageCenter.transform.position);
     villagersByType = new Dictionary<VillagerType, List<Villager>>();
     villageConfig.startingAllocations.Select((item)=>{
       var type = item.type;
       villagersByType[type] = new List<Villager>();
       for(var i = 0; i < item.count; i++){
-        SpawnVillager(type, predatorController.GetNearestPredator);
+        SpawnVillager(type, predatorController.GetNearestPredator, primaryHut);
       }
       return item.count;
     }).ToArray();
@@ -81,23 +84,28 @@ public class VillageController: MonoBehaviour {
     }) ?? new Dictionary<VillagerType, int>();
   }
 
-  public VillageHut GetNearestHut(Vector2 position){
-    return hut;
+  public VillageHut GetNearestHut(Vector2 from){
+    return DistanceUtility.GetNearest(from, huts);
+  }
+  public VillageHut GetPrimaryHut(){
+    return primaryHut;
   }
 
-  private void SpawnHut(){
-    hut = GameObject.Instantiate(villageConfig.prefab).GetComponent<VillageHut>();
-    hut.transform.position = villageCenter.position;
+  public VillageHut SpawnHut(Vector2 position){
+    var hut = GameObject.Instantiate(villageConfig.prefab).GetComponent<VillageHut>();
+    hut.transform.position = position;
     var oldCapacity = foodCapacity;
     foodCapacity = foodCapacity + villageConfig.hutCapacity;
+    huts.Add(hut);
     OnFoodCapacityChange?.Invoke(oldCapacity, foodCapacity);
+    return hut;
   }
 
   public Tuple<int, int> GetFoodCapactiyAndStorage(){
     return new Tuple<int, int>(foodCapacity, foodStorage);
   }
 
-  public void SpawnVillager(VillagerType type, Func<Vector2, CombatTarget> targetProvider){
+  private void SpawnVillager(VillagerType type, Func<Vector2, CombatTarget> targetProvider, VillageHut hut){
     var priorAllocation = GetCurrentAllocation();
     var villager = GameObject.Instantiate(villagerConfig.prefab).GetComponent<Villager>();
     villager.Init(villagerConfig, FeedVillager, type, targetProvider);
