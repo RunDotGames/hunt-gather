@@ -243,12 +243,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 844006074}
-  - component: {fileID: 844006073}
   - component: {fileID: 844006075}
+  - component: {fileID: 844006073}
   - component: {fileID: 844006076}
   - component: {fileID: 844006078}
   - component: {fileID: 844006077}
   - component: {fileID: 844006079}
+  - component: {fileID: 844006080}
   m_Layer: 0
   m_Name: game-controller
   m_TagString: Untagged
@@ -323,11 +324,12 @@ MonoBehaviour:
     xMargin: 30
     yMargin: 70
     startingFruitPercent: 0.33
-    fruitFood: 10
-  treeConfig:
     fruitRange:
-      min: 50
-      max: 500
+      min: 30
+      max: 45
+    harvestRange:
+      min: 2
+      max: 3
 --- !u!114 &844006077
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -342,8 +344,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   config:
     initialDelay:
-      min: 10
-      max: 15
+      min: 30
+      max: 35
     spawnDelay:
       min: 20
       max: 30
@@ -358,6 +360,10 @@ MonoBehaviour:
       min: 3
       max: 6
     spotDistance: 1.5
+  hunterConfig:
+    prowlPace: 0.3
+    spotDistance: 2.3
+    attackDistance: 0.5
 --- !u!114 &844006078
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -379,30 +385,16 @@ MonoBehaviour:
       count: 1
     - type: 2
       count: 0
-    startingStorage: 50
     prefab: {fileID: 1105513266869155717, guid: 0736323c68f1d524c8e3492c5e18182e,
       type: 3}
     hutRadius: 2
-    hutCapacity: 100
-    feedAmount: 2
   villagerConfig:
     prefab: {fileID: 797220966460286950, guid: 60c6568a126c49d428b2b1fe7ce8833d, type: 3}
     speed: 0.8
     arrivalDistance: 0.2
-    attackDistance: 0.5
-    gatherTime: 2
     restRange:
       min: 4
       max: 5
-    hungerRange:
-      min: 3
-      max: 3
-    workRange:
-      min: 1
-      max: 2
-    attackPace: 1.2
-    prowlPace: 0.3
-    spotDistance: 1.5
     gatherColor: {r: 0.21782663, g: 0.8396226, b: 0.43381378, a: 1}
     hunterColor: {r: 0.7169812, g: 0.3726469, b: 0.29423285, a: 1}
     builderColor: {r: 0.2236116, g: 0.38447228, b: 0.7075472, a: 1}
@@ -413,7 +405,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 844006072}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: be650473d926ce14ea24040a7c8e03b9, type: 3}
   m_Name: 
@@ -424,4 +416,27 @@ MonoBehaviour:
     projectRadius: 0.7
   projectConfig:
     totalWork: 100
-    workIncrement: 25
+    workIncrement: 5
+    workTime:
+      min: 1
+      max: 2
+--- !u!114 &844006080
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 844006072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dda1c2a3890763c4596ea05681483330, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  config:
+    perHutCapacity: 10000
+    startingStorage: 5000
+    perEatAmount: 2
+    perHarvestAmount: 300
+    eatTimeRange:
+      min: 0.1
+      max: 0.3

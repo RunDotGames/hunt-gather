@@ -8,14 +8,8 @@ public class VillagerConfig {
   public GameObject prefab;
   public float speed;
   public float arrivalDistance;
-  public float attackDistance;
-  public float gatherTime;
   public RandomFloatRange restRange;
-  public RandomFloatRange hungerRange;
-  public RandomIntRange workRange;
-  public float attackPace;
-  public float prowlPace;
-  public float spotDistance;
+  
   public Color gatherColor;
   public Color hunterColor;
   public Color builderColor;
@@ -24,11 +18,8 @@ public class VillagerConfig {
 [Serializable]
 public class VillageConfig {
   public VillagerAllocation[] startingAllocations;
-  public int startingStorage;
   public GameObject prefab;
   public float hutRadius;
-  public int hutCapacity;
-  public int feedAmount;
 }
 
 [Serializable]
@@ -41,6 +32,9 @@ public enum VillagerType {
   Gatherer, Hunter, Builder
 }
 
+public enum HutType {
+  Storage, Housing
+}
 
 public delegate void OnValueChange<T>(T oldValue, T newValue);
 
@@ -53,16 +47,18 @@ public class VillageController: MonoBehaviour {
   private List<VillageHut> huts = new List<VillageHut>();
   private List<Villager> villagers = new List<Villager>();
   private Dictionary<VillagerType, List<Villager>> villagersByType;
+  private Dictionary<HutType, List<VillageHut>> hutsByType = new Dictionary<HutType, List<VillageHut>>();
 
-  public OnValueChange<int> OnFoodCapacityChange;
-  public OnValueChange<int> OnFoodStorageChange;
-  public OnValueChange<Dictionary<VillagerType, int>> OnAllocationChange;
-
-  private int foodCapacity;
-  private int foodStorage;
+  
+  public event OnValueChange<Dictionary<VillagerType, int>> OnVillagerAllocationChange;
+  public event OnValueChange<Dictionary<HutType, int>> OnHutAllocationChange;
+  public event Action<Villager> OnVillagerSpawned;
   
   public void SpawnVillage(){
     var predatorController = GameObject.FindObjectOfType<PredatorController>();
+    
+    hutsByType[HutType.Housing] = new List<VillageHut>();
+    hutsByType[HutType.Storage] = new List<VillageHut>();
     primaryHut = SpawnHut(villageCenter.transform.position);
     villagersByType = new Dictionary<VillagerType, List<Villager>>();
     villageConfig.startingAllocations.Select((item)=>{
@@ -73,15 +69,24 @@ public class VillageController: MonoBehaviour {
       }
       return item.count;
     }).ToArray();
-    Debug.Log("village init");
-    StoreFood(villageConfig.startingStorage);
   }
 
-  public Dictionary<VillagerType, int> GetCurrentAllocation(){
-    return villagersByType?.Keys.Aggregate(new Dictionary<VillagerType, int>(), (result, item) => {
-      result[item] = villagersByType[item].Count;
+  public Dictionary<HutType, int> GetCurrentHutAllocation(){
+    return GetAllocation(hutsByType);
+  }
+  public Dictionary<VillagerType, int> GetCurrentVillagerAllocation(){
+    return GetAllocation(villagersByType);
+  }
+
+  public IEnumerable<Villager> GetVillagers(){
+    return villagers;
+  }
+
+  private Dictionary<K, int> GetAllocation<K, V>(Dictionary<K, List<V>> map){
+    return map?.Keys.Aggregate(new Dictionary<K, int>(), (result, item) => {
+      result[item] = map[item].Count;
       return result;
-    }) ?? new Dictionary<VillagerType, int>();
+    }) ?? new Dictionary<K, int>();
   }
 
   public VillageHut GetNearestHut(Vector2 from){
@@ -92,60 +97,35 @@ public class VillageController: MonoBehaviour {
   }
 
   public VillageHut SpawnHut(Vector2 position){
+    var priorAllocation = GetCurrentHutAllocation();
     var hut = GameObject.Instantiate(villageConfig.prefab).GetComponent<VillageHut>();
     hut.transform.position = position;
-    var oldCapacity = foodCapacity;
-    foodCapacity = foodCapacity + villageConfig.hutCapacity;
     huts.Add(hut);
-    OnFoodCapacityChange?.Invoke(oldCapacity, foodCapacity);
+    hutsByType[HutType.Storage].Add(hut);
+    OnHutAllocationChange?.Invoke(priorAllocation, GetCurrentHutAllocation());
     return hut;
   }
 
-  public Tuple<int, int> GetFoodCapactiyAndStorage(){
-    return new Tuple<int, int>(foodCapacity, foodStorage);
-  }
-
   private void SpawnVillager(VillagerType type, Func<Vector2, CombatTarget> targetProvider, VillageHut hut){
-    var priorAllocation = GetCurrentAllocation();
+    var priorAllocation = GetCurrentVillagerAllocation();
     var villager = GameObject.Instantiate(villagerConfig.prefab).GetComponent<Villager>();
-    villager.Init(villagerConfig, FeedVillager, type, targetProvider);
+    villager.Init(villagerConfig, type, targetProvider);
     villagers.Add(villager);
     villager.transform.position = (UnityEngine.Random.insideUnitCircle.normalized * villageConfig.hutRadius) + (Vector2)hut.transform.position;
     villager.OnDeath += HandleVillagerDeath;
     villagersByType[type].Add(villager);
-    OnAllocationChange?.Invoke(priorAllocation, GetCurrentAllocation());
+    OnVillagerAllocationChange?.Invoke(priorAllocation, GetCurrentVillagerAllocation());
+    OnVillagerSpawned?.Invoke(villager);
   }
 
   private void HandleVillagerDeath(CombatTarget target){
     var villager = (Villager)target;
-    var priorAllocation = GetCurrentAllocation();
+    var priorAllocation = GetCurrentVillagerAllocation();
     villager.OnDeath -= HandleVillagerDeath;
     villagers.Remove(villager);
     var type = villager.GetVillagerType();
     villagersByType[type].Remove(villager);
-    OnAllocationChange?.Invoke(priorAllocation, GetCurrentAllocation());
-  }
-
-  public void StoreFood(int quantity){
-    var priorFood = foodStorage;
-    foodStorage = Math.Min(quantity + foodStorage, foodCapacity);
-    if(priorFood != foodStorage){
-      OnFoodStorageChange?.Invoke(priorFood, foodStorage);
-    }
-  }
-
-  private bool FeedVillager(){
-    if(foodStorage < villageConfig.feedAmount){
-      return false;
-    }
-    var oldStorage = foodStorage;
-    foodStorage = foodStorage - villageConfig.feedAmount;
-    OnFoodStorageChange(oldStorage, foodStorage);
-    return true;
-  }
-
-  public bool IsStorageFull(){
-    return foodCapacity <= foodStorage;
+    OnVillagerAllocationChange?.Invoke(priorAllocation, GetCurrentVillagerAllocation());
   }
 
   public Villager getNearestVillager(Vector2 from){
@@ -153,8 +133,8 @@ public class VillageController: MonoBehaviour {
   }
 
 
-  public void ReAllocate(Dictionary<VillagerType, int> newAllocation){
-    var oldAllocation = GetCurrentAllocation();
+  public void ReAllocateVillagers(Dictionary<VillagerType, int> newAllocation){
+    var oldAllocation = GetCurrentVillagerAllocation();
     var released = newAllocation.Keys.Aggregate(new List<Villager>(), (result, item) =>{
       var dif = oldAllocation[item] - newAllocation[item];
       if(dif <= 0){

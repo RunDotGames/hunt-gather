@@ -1,6 +1,17 @@
 using UnityEngine;
+using System;
 
-public class Tree : MonoBehaviour {
+public class TreeConfig {
+  public bool withFruit;
+  public Action<Tree> onFruit;
+  public Action<Tree> onRelease;
+  public Action<Tree> onHarvest;
+  public RandomFloatRange harvestRange;
+  public RandomFloatRange fruitRange;
+      
+}
+
+public class Tree : MonoBehaviour, HarvestTarget {
   
   public Color fruitColor;
   public Color normalColor;
@@ -13,10 +24,9 @@ public class Tree : MonoBehaviour {
 
   public delegate void TreeEvent(Tree self);
 
-  public void Init(TreeConfig config, bool withFruit, TreeEvent onFruit){
+  public void Init(TreeConfig config){
     this.config = config;
-    this.onFruit = onFruit;
-    if(withFruit){
+    if(config.withFruit){
       MakeFruit();
     } else {
       PopNextFruitTime();
@@ -33,9 +43,7 @@ public class Tree : MonoBehaviour {
   }
 
   public void Defruit(){
-    PopNextFruitTime();
-    hasFruit = false;
-    fruitSprite.color = normalColor;
+    
   }
 
   private void PopNextFruitTime(){
@@ -46,5 +54,24 @@ public class Tree : MonoBehaviour {
     if(!hasFruit && (Time.time > nextFruitTime)){
       MakeFruit();
     }
+  }
+
+  public Vector2 GetPostion() {
+    return transform.position;
+  }
+
+  public void Release() {
+      config.onRelease(this);
+  }
+
+  public void Harvest() {
+    config.onHarvest(this);
+    PopNextFruitTime();
+    hasFruit = false;
+    fruitSprite.color = normalColor;
+  }
+
+  public float GetHarvestTime() {
+    return config.harvestRange.GetRangeValue();
   }
 }

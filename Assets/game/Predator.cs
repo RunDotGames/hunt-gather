@@ -13,8 +13,11 @@ public class Predator : MonoBehaviour, CombatTarget {
       return this;
   }
 
-  public void Init(CombatAgentConfig config){
-    this.agent = new CombatAgent(config, "predator");
+  public void Init(Combatant combatant, AgentConfigCommon common){
+    var agent = new CombatAgent(common, "predator");
+    agent.ProvideCombatant(combatant);
+    this.agent = agent;
+    
   }
 
   public void Kill(string reason) {

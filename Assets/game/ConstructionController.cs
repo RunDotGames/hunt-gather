@@ -16,9 +16,10 @@ public class ConstructionController: MonoBehaviour {
   private ForestController forest;
   private VillageController village;
   private ConstructionProject active;
-  public void Start(){
-    this.village = GameObject.FindObjectOfType<VillageController>();
-    this.forest = GameObject.FindObjectOfType<ForestController>();
+  
+  public void Init(VillageController village, ForestController forest){
+    this.village = village;
+    this.forest = forest;
   }
 
   public ConstructionProject GetActiveProject(){

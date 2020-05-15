@@ -9,15 +9,10 @@ public interface CombatTarget {
  MonoBehaviour GetBehaviour();
 }
 
-
-public class CombatAgentConfig {
-  public float attackPace;
-  public float prowlPace;
-  public float arrivalDistance;
-  public float attackDistance;
+public class Combatant{
+  public float prowlSpeed;
   public float spotDistance;
-  public RandomFloatRange idleRange;
-  public Transform transform;
+  public float attackDistance;
   public Func<Vector2, CombatTarget> targetProvider;
 }
 
@@ -32,7 +27,8 @@ public class CombatAgent: Agent {
     {AgentState.Attacking, 200},
   };
 
-  private CombatAgentConfig config;
+  private AgentConfigCommon config;
+  private Combatant combatant;
   private AgentState state = AgentState.Idle;
   private Dictionary<AgentState, AgentUpdate> updates = new Dictionary<AgentState, AgentUpdate>();
   private AgentPather prowlPather;
@@ -42,15 +38,19 @@ public class CombatAgent: Agent {
   private CombatTarget target;
   private string name;
 
-  public CombatAgent(CombatAgentConfig config, string name){
+  public CombatAgent(AgentConfigCommon config, string name){
     this.name = name;
     this.config = config;
-    this.prowlPather = new AgentPather(){arrivalDistance=config.arrivalDistance, speed=config.prowlPace, transform=config.transform};
-    this.attackPather = new AgentPather(){arrivalDistance=config.attackDistance, speed=config.attackPace, transform=config.transform};
     updates[AgentState.Idle] = UpdateIdle;
     updates[AgentState.Prowling] = UpdateProwling;
     updates[AgentState.Attacking] = UpdateAttacking;
     ReturnToIdle();
+  }
+
+  public void ProvideCombatant(Combatant combatant){
+    this.combatant = combatant;
+    this.prowlPather = new AgentPather(){arrivalDistance=config.arrivalDistance, speed=combatant.prowlSpeed, transform=config.transform};
+    this.attackPather = new AgentPather(){arrivalDistance=combatant.attackDistance, speed=config.speed, transform=config.transform};
   }
 
   public void Update(){
@@ -67,8 +67,8 @@ public class CombatAgent: Agent {
     state = AgentState.Prowling;
   }
   private void UpdateProwling(){
-    var nearest = config.targetProvider(config.transform.position);
-    if(nearest != null && (nearest.GetBehaviour().transform.position - config.transform.position).magnitude < config.spotDistance){
+    var nearest = combatant.targetProvider(config.transform.position);
+    if(nearest != null && (nearest.GetBehaviour().transform.position - config.transform.position).magnitude < combatant.spotDistance){
       state = AgentState.Attacking;
       target = nearest;
       target.OnDeath += HandleTargetDead;
@@ -82,7 +82,7 @@ public class CombatAgent: Agent {
 
   private void ReturnToIdle(){
     state = AgentState.Idle;
-    nextProwl = Time.time + config.idleRange.GetRangeValue();
+    nextProwl = Time.time + config.restRange.GetRangeValue();
   }
 
   private void HandleTargetDead(CombatTarget dead){

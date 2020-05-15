@@ -11,7 +11,12 @@ public interface Agent{
   int GetAvailability();
 }
 
-
+public class AgentConfigCommon {
+  public float speed;
+  public Transform transform;
+  public float arrivalDistance;
+  public RandomFloatRange restRange;
+}
 
 public class AgentPather{
 

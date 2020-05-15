@@ -1,13 +1,13 @@
 
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 
-public class GathererAgentConfig {
-  public float speed;
-  public Transform transform;
-  public float arrivalDistance;
-  public float gatherTime;
-  public RandomFloatRange restRange;
+public interface HarvestTarget{
+  Vector2 GetPostion();
+  void Release();
+  void Harvest();
+  float GetHarvestTime();
 }
 
 public class GathererAgent: Agent {
@@ -25,22 +25,21 @@ public class GathererAgent: Agent {
     Idle, GoToFood, GatherFood, GoToHut, Rest,
   }
 
-  private Tree target;
-  private GathererAgentConfig config;
+  private HarvestTarget target;
+  private AgentConfigCommon config;
   private float nextActionTime;
-  private int carrying;
-
   private GathererState state;
   private Dictionary<GathererState, AgentUpdate> updates = new Dictionary<GathererState, AgentUpdate>();
-  private ForestController forest;
-  private VillageController village;
-  private AgentPather pather;
 
-  public GathererAgent(GathererAgentConfig config){
+  private AgentPather pather;
+  private Func<bool> storageCheck;
+  private Action store;
+  private Func<Vector2, Vector2> storeLocation;
+  private Func<Vector2, HarvestTarget> getTarget;
+  
+  public GathererAgent(AgentConfigCommon config){
     this.config = config;
     this.pather = new AgentPather(){transform=config.transform, speed=config.speed,arrivalDistance=config.arrivalDistance};
-    forest = GameObject.FindObjectOfType<ForestController>();
-    village = GameObject.FindObjectOfType<VillageController>();
     updates[GathererState.Idle] = UpdateIdle;
     updates[GathererState.GoToFood] = UpdateGoToFood;
     updates[GathererState.GatherFood] = UpdateGatherFood;
@@ -49,18 +48,28 @@ public class GathererAgent: Agent {
     ReturnToRest();
   }
 
+  public void ProvideFeeder(Func<bool> storageCheck, Action store, Func<Vector2, Vector2> storeLocation){
+    this.storageCheck = storageCheck;
+    this.store = store;
+    this.storeLocation = storeLocation;
+  }
+
+  public void ProvideHarvester(Func<Vector2, HarvestTarget> getTarget){
+    this.getTarget = getTarget;
+  }
+  
   public void Update(){
     updates[state]();
   }
 
   private void UpdateIdle(){
-    target = forest.GetNearestFruitTreeTarget(config.transform.position);
-    if(target != null && !village.IsStorageFull()){
+    target = getTarget?.Invoke(config.transform.position) ?? null;
+    if(target != null && !(storageCheck?.Invoke() ?? true)){
       state = GathererState.GoToFood;
     }
   }
   private void UpdateGoToFood(){
-    if(pather.ToPoint(target.transform.position)){
+    if(pather.ToPoint(target.GetPostion())){
       ReturnToGather();
     }
   }
@@ -68,23 +77,25 @@ public class GathererAgent: Agent {
   private void UpdateGatherFood(){
     if(Time.time > nextActionTime){
       state = GathererState.GoToHut;
-      carrying = forest.DefruitTree(target);
+      target.Harvest();
       target = null;
       return;
     }
   }
 
   private void UpdateGoToHut(){
-    if(pather.ToPoint(village.GetNearestHut(config.transform.position).transform.position)){
-      village.StoreFood(carrying);
-      carrying = 0;
+    if(storeLocation == null){
+      return;
+    }
+    if(pather.ToPoint(storeLocation(config.transform.position))){
+      store?.Invoke();
       ReturnToRest();
       return;
     }
   }
 
   public void ReturnToGather(){
-    nextActionTime = Time.time + config.restRange.GetRangeValue();
+    nextActionTime = Time.time + target.GetHarvestTime();
     state = GathererState.GatherFood;
   }
   public void UpdateRest(){
@@ -105,13 +116,12 @@ public class GathererAgent: Agent {
 
   public void Release(){
     if(target != null) {
-      forest.ReleaseTarget(target);
+      target.Release();
       target = null;
     }
   }
 
   public void Resume(){
-    carrying = 0;
     ReturnToRest();
   }
 

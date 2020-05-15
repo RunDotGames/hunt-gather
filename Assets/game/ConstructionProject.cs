@@ -6,6 +6,7 @@ using System;
 public class ConstructionProjectConfig {
   public int totalWork;
   public int workIncrement;
+  public RandomFloatRange workTime;
 }
 
 public class ConstructionProject : MonoBehaviour {
@@ -26,6 +27,10 @@ public class ConstructionProject : MonoBehaviour {
       OnComplete?.Invoke(this);
       GameObject.Destroy(gameObject);
     }
+  }
+
+  public float GetWorkTime(){
+    return config.workTime.GetRangeValue();
   }
 
 

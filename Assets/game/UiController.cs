@@ -11,14 +11,17 @@ public class UiController: MonoBehaviour {
 
   public void Start(){
     Debug.Log("ui init");
+    
+    var food = GameObject.FindObjectOfType<FoodController>();
+    food.OnFoodStorageChange += HandleFoodStorageChange;
+    food.OnFoodCapacityChange += HandleFoodCapacityChange;
+    foodBar.Init(food.GetCapacity(), food.GetStorage());
+    
     village = GameObject.FindObjectOfType<VillageController>();
-    village.OnFoodStorageChange += HandleFoodStorageChange;
-    village.OnFoodCapacityChange += HandleFoodCapacityChange;
-    village.OnAllocationChange += HandleAllocationChange;
-    var foodDetails = village.GetFoodCapactiyAndStorage();
-    foodBar.Init(foodDetails.Item1, foodDetails.Item2);
+    village.OnVillagerAllocationChange += HandleAllocationChange;
+    
     villagerTypeSlider.OnChange += HandleTypeSliderChange;
-    var allocation = village.GetCurrentAllocation();
+    var allocation = village.GetCurrentVillagerAllocation();
     HandleAllocationChange(allocation, allocation);
   }
 
@@ -34,7 +37,7 @@ public class UiController: MonoBehaviour {
     newAllocation[VillagerType.Gatherer] = positions[0];
     newAllocation[VillagerType.Hunter] = positions[1] -  positions[0];
     newAllocation[VillagerType.Builder] = count -  positions[1];
-    village.ReAllocate(newAllocation);
+    village.ReAllocateVillagers(newAllocation);
   }
   private void HandleAllocationChange(Dictionary<VillagerType, int> old, Dictionary<VillagerType, int> updated){
     int[] positions = new int[2];

@@ -3,14 +3,6 @@ using System;
 using System.Collections.Generic;
 
 
-public class BuilderConfig {
-  public RandomFloatRange restRange;
-  public RandomIntRange workRange;
-  public float walkSpeed;
-  public float arrivalDistance;
-  public Transform transform;
-}
-
 public class BuilderAgent : Agent {
   
   private enum AgentState {
@@ -27,12 +19,12 @@ public class BuilderAgent : Agent {
   private Dictionary<AgentState, Action> updates;
   private AgentState state;
   private ConstructionController construction;
-  private BuilderConfig config;
+  private AgentConfigCommon config;
   private float nextActionTime;
   private AgentPather walkPather;
   private ConstructionProject active;
 
-  public BuilderAgent(BuilderConfig config){
+  public BuilderAgent(AgentConfigCommon config){
     this.config = config;
     updates = new Dictionary<AgentState, Action>();
     updates[AgentState.Idle] = UpdateIdle;
@@ -40,7 +32,7 @@ public class BuilderAgent : Agent {
     updates[AgentState.WorkProject] = UpdateWorkProject;
     updates[AgentState.Rest] = UpdateRest;
     construction = GameObject.FindObjectOfType<ConstructionController>();
-    walkPather = new AgentPather(){arrivalDistance=config.arrivalDistance, speed=config.walkSpeed, transform=config.transform};
+    walkPather = new AgentPather(){arrivalDistance=config.arrivalDistance, speed=config.speed, transform=config.transform};
     ReturnToRest();
   }
 
@@ -81,13 +73,13 @@ public class BuilderAgent : Agent {
   public void UpdateGoToProject(){
     if(walkPather.ToPoint(active.transform.position)){
       state = AgentState.WorkProject;
-      nextActionTime = Time.time + config.workRange.GetRangeValue();
+      nextActionTime = Time.time + active.GetWorkTime();
     }
   }
   
   public void UpdateWorkProject(){
     if(Time.time > nextActionTime){
-      nextActionTime = Time.time + config.workRange.GetRangeValue();
+      nextActionTime = Time.time + active.GetWorkTime();
       active.ContributeWork();
     }
   }

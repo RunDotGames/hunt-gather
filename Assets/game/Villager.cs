@@ -6,54 +6,51 @@ using System.Collections.Generic;
 public class Villager : MonoBehaviour, CombatTarget {
 
   public SpriteRenderer sprite;
+  
+  public delegate void VillagerEvent(Villager target);
+  public event Action<CombatTarget> OnDeath;
 
   private Dictionary<VillagerType, Agent> agents;
   private Dictionary<VillagerType, Color> colorMap = new Dictionary<VillagerType, Color>();
   private float nextHungry = -1;
-  
-  public delegate bool OnHunger();
-  public delegate void VillagerEvent(Villager target);
-  private OnHunger onHunger;
+  private Func<bool> onHunger;
+  private RandomFloatRange feedRange;
   private VillagerConfig config;
-
-  public event Action<CombatTarget> OnDeath;
-
   private VillagerType type;
   private bool isDead = false;
-  public void Init(VillagerConfig config, OnHunger onHunger, VillagerType type, Func<Vector2, CombatTarget> targetProvider){
+  
+  public void Init(VillagerConfig config, VillagerType type, Func<Vector2, CombatTarget> targetProvider){
     colorMap[VillagerType.Gatherer] = config.gatherColor;
     colorMap[VillagerType.Hunter] = config.hunterColor;
     colorMap[VillagerType.Builder] = config.builderColor;
     sprite.color = colorMap[type];
     this.type = type;
     this.config = config;
-    this.onHunger = onHunger;
     agents = new Dictionary<VillagerType, Agent>();
-    agents[VillagerType.Gatherer] = new GathererAgent(new GathererAgentConfig(){
+    var commonConfig = new AgentConfigCommon(){
       arrivalDistance = config.arrivalDistance,
-      gatherTime = config.gatherTime,
+      restRange = config.restRange,
+      transform = this.transform,
       speed = config.speed,
-      transform = this.transform,
-      restRange = config.restRange,
-    });
-    agents[VillagerType.Hunter] = new CombatAgent(new CombatAgentConfig(){
-      arrivalDistance = config.arrivalDistance,
-      attackPace = config.attackPace,
-      prowlPace = config.prowlPace,
-      idleRange = config.restRange,
-      spotDistance = config.spotDistance,
-      transform = this.transform,
-      targetProvider = targetProvider,
-      attackDistance = config.attackDistance,
-    }, "villager");
-    agents[VillagerType.Builder] = new BuilderAgent(new BuilderConfig(){
-      arrivalDistance = config.arrivalDistance,
-      restRange = config.restRange,
-      transform = transform,
-      walkSpeed = config.speed,
-      workRange = config.workRange,
-    });
+    };
+    agents[VillagerType.Gatherer] = new GathererAgent(commonConfig);
+    agents[VillagerType.Hunter] = new CombatAgent(commonConfig, "villager");
+    agents[VillagerType.Builder] = new BuilderAgent(commonConfig);
     UpdateHunger(false);
+  }
+
+  public void ProvideFeeder(Func<bool> feeder, Func<bool> storageCheck, Action store, RandomFloatRange feedRange, Func<Vector2, Vector2> storeLocation){
+    this.onHunger = feeder;
+    this.feedRange = feedRange;
+    ((GathererAgent)agents[VillagerType.Gatherer]).ProvideFeeder(storageCheck, store, storeLocation);
+  }
+
+  public void ProvideHarvester(Func<Vector2, HarvestTarget> getTarget){
+    ((GathererAgent)agents[VillagerType.Gatherer]).ProvideHarvester(getTarget);
+  }
+
+  public void ProvideCombatant(Combatant combatant){
+    ((CombatAgent)agents[VillagerType.Hunter]).ProvideCombatant(combatant);
   }
 
   public VillagerType GetVillagerType(){
@@ -70,12 +67,12 @@ public class Villager : MonoBehaviour, CombatTarget {
   private void UpdateHunger(bool eat){
     if(nextHungry < 0 || nextHungry < Time.time) {
       if(eat){
-        var fed = onHunger();
+        var fed = onHunger?.Invoke() ?? true;
         if(!fed){
           Kill("starvation");
         }
       }
-      nextHungry = Time.time + config.hungerRange.GetRangeValue();
+      nextHungry = Time.time + feedRange?.GetRangeValue() ?? 0;
     }
   }
 

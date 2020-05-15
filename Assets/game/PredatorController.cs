@@ -17,6 +17,13 @@ public class PredatorControlConfig{
   public float spotDistance;
 }
 
+[Serializable]
+public class HunterConfig {
+  public float prowlPace;
+  public float spotDistance;
+  public float attackDistance;
+}
+
 public class PredatorController : MonoBehaviour {
   private enum ScreenSide { Left, Right, Top, Bottom }
   
@@ -29,12 +36,16 @@ public class PredatorController : MonoBehaviour {
   private readonly int SideCount = Enum.GetNames(typeof(ScreenSide)).Length;
 
   public PredatorControlConfig config;
+  public HunterConfig hunterConfig;
   private Dictionary<ScreenSide, SideConfig> spawnConfig = new Dictionary<ScreenSide, SideConfig>();
 
   private float nextSpawn;
   private List<Predator> predators = new List<Predator>();
-  
-  public void Start(){
+  private VillageController village;
+
+  public void Init(VillageController village){
+    this.village = village;
+    village.OnVillagerSpawned += HandleVillagerSpawned;
     spawnConfig.Add(ScreenSide.Top, new SideConfig{comp=Vector2.right, basis=Vector2.up*Screen.height, nudge=Vector2.up});
     spawnConfig.Add(ScreenSide.Bottom, new SideConfig{comp=Vector2.right, basis=Vector2.zero, nudge=Vector2.down});
     spawnConfig.Add(ScreenSide.Right, new SideConfig{comp=Vector2.up, basis=Vector2.right*Screen.width, nudge=Vector2.right});
@@ -49,9 +60,17 @@ public class PredatorController : MonoBehaviour {
     }
   }
 
+  private void HandleVillagerSpawned(Villager villager){
+    villager.ProvideCombatant(new Combatant(){
+      attackDistance = hunterConfig.attackDistance,
+      prowlSpeed = hunterConfig.prowlPace,
+      spotDistance = hunterConfig.spotDistance,
+      targetProvider = GetNearestPredator,
+    });
+  }
+
   
-private void Spawn(){
-    var village = GameObject.FindObjectOfType<VillageController>();
+  private void Spawn(){
     var predator = GameObject.Instantiate(config.prefab).GetComponent<Predator>();
     var screenSide = (ScreenSide)UnityEngine.Random.Range(0, SideCount);
     var sideConfig = spawnConfig[screenSide];
@@ -61,16 +80,20 @@ private void Spawn(){
     var position = (Vector2)Camera.main.ScreenToWorldPoint(spawnPoint);
     predator.transform.position = new Vector3(position.x, position.y, 0);
     predators.Add(predator);
-    predator.Init(new CombatAgentConfig(){
-      arrivalDistance=config.arrivalDistance,
-      idleRange=config.idleTime,
-      prowlPace = config.prowlPace,
-      attackPace = config.attackPace,
-      spotDistance=config.spotDistance,
-      transform = predator.transform,
-      targetProvider = village.getNearestVillager,
-      attackDistance = config.attackDistance,
-    });
+    predator.Init(
+      new Combatant(){
+        attackDistance = config.attackDistance,
+        prowlSpeed = config.prowlPace,
+        spotDistance = config.spotDistance,
+        targetProvider = village.getNearestVillager,
+      },
+      new AgentConfigCommon(){
+        arrivalDistance = config.arrivalDistance,
+        restRange = config.idleTime,
+        speed = config.attackPace,
+        transform = predator.transform,
+      }
+    );
     predator.OnDeath += HandlePredatorDeath;
   }
 
