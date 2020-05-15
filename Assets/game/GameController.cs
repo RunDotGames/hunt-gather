@@ -15,18 +15,20 @@ public class GameController : MonoBehaviour {
     
 
     void Start() {
-        GameObject.Instantiate(prefabs.ui);
-
+        var ui = GameObject.Instantiate(prefabs.ui).GetComponent<UiController>();
         var villageController = GameObject.FindObjectOfType<VillageController>();
         var foodController = GameObject.FindObjectOfType<FoodController>();
         var forestController = GameObject.FindObjectOfType<ForestController>();
         var constructionController = GameObject.FindObjectOfType<ConstructionController>();
         var predatorController = GameObject.FindObjectOfType<PredatorController>();
+        var babiesController = GameObject.FindObjectOfType<BabiesController>();
         
+        ui.Init(villageController, foodController, babiesController, constructionController);
         foodController.Init(villageController);
         forestController.SpawnForest(villageController);
         constructionController.Init(villageController, forestController);
         predatorController.Init(villageController);
+        babiesController.Init(villageController);
         villageController.SpawnVillage();
 
     }

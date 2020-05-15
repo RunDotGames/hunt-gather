@@ -55,8 +55,6 @@ public class VillageController: MonoBehaviour {
   public event Action<Villager> OnVillagerSpawned;
   
   public void SpawnVillage(){
-    var predatorController = GameObject.FindObjectOfType<PredatorController>();
-    
     hutsByType[HutType.Housing] = new List<VillageHut>();
     hutsByType[HutType.Storage] = new List<VillageHut>();
     primaryHut = SpawnHut(villageCenter.transform.position);
@@ -65,7 +63,7 @@ public class VillageController: MonoBehaviour {
       var type = item.type;
       villagersByType[type] = new List<Villager>();
       for(var i = 0; i < item.count; i++){
-        SpawnVillager(type, predatorController.GetNearestPredator, primaryHut);
+        SpawnVillager(type, primaryHut);
       }
       return item.count;
     }).ToArray();
@@ -106,10 +104,14 @@ public class VillageController: MonoBehaviour {
     return hut;
   }
 
-  private void SpawnVillager(VillagerType type, Func<Vector2, CombatTarget> targetProvider, VillageHut hut){
+  public void SpawnVillager(){
+    SpawnVillager(VillagerType.Gatherer, primaryHut);
+  }
+
+  private void SpawnVillager(VillagerType type, VillageHut hut){
     var priorAllocation = GetCurrentVillagerAllocation();
     var villager = GameObject.Instantiate(villagerConfig.prefab).GetComponent<Villager>();
-    villager.Init(villagerConfig, type, targetProvider);
+    villager.Init(villagerConfig, type);
     villagers.Add(villager);
     villager.transform.position = (UnityEngine.Random.insideUnitCircle.normalized * villageConfig.hutRadius) + (Vector2)hut.transform.position;
     villager.OnDeath += HandleVillagerDeath;
@@ -133,35 +135,70 @@ public class VillageController: MonoBehaviour {
   }
 
 
+  private int CompareVillager(Villager a, Villager b){
+    return a.GetAvailability() - b.GetAvailability();
+  }
+
+  private int CompareHut(VillageHut a, VillageHut b){
+    return 0;
+  }
+
+  private void RassignHut(VillageHut hut, HutType type){
+
+  }
+
+  private void ReassignVillager(Villager villager, VillagerType type) {
+    villager.SetVillagerType(type);
+  }
+
   public void ReAllocateVillagers(Dictionary<VillagerType, int> newAllocation){
     var oldAllocation = GetCurrentVillagerAllocation();
-    var released = newAllocation.Keys.Aggregate(new List<Villager>(), (result, item) =>{
+    Reallocate(oldAllocation, newAllocation, villagersByType, CompareVillager, ReassignVillager);
+    OnVillagerAllocationChange?.Invoke(oldAllocation, GetCurrentVillagerAllocation());
+  }
+
+  public void ReAllocateHuts(Dictionary<HutType, int> newAllocation){
+    var oldAllocation = GetCurrentHutAllocation();
+    var storage = newAllocation.ContainsKey(HutType.Storage) ? newAllocation[HutType.Storage] : 0;
+    if(storage > 0){
+      Reallocate(oldAllocation, newAllocation, hutsByType, CompareHut, RassignHut);
+    }
+    OnHutAllocationChange?.Invoke(oldAllocation, GetCurrentHutAllocation());
+  }
+
+  private static void Reallocate<T, V>(
+    Dictionary<T, int> oldAllocation,
+    Dictionary<T, int> newAllocation,
+    Dictionary<T, List<V>> basis,
+    Func<V, V, int> comparer,
+    Action<V, T> onReassign
+  ){
+    var released = newAllocation.Keys.Aggregate(new List<V>(), (result, item) =>{
       var dif = oldAllocation[item] - newAllocation[item];
       if(dif <= 0){
         return result;
       }
-      villagersByType[item].Sort((first, second) => first.GetAvailability() - second.GetAvailability());
+      basis[item].Sort((V first, V second) => comparer(first, second));
       for(int i = 0; i < dif; i++){
-        var villager = villagersByType[item][0];
-        villagersByType[item].RemoveAt(0);
-        result.Add(villager);
+        var basisItem = basis[item][0];
+        basis[item].RemoveAt(0);
+        result.Add(basisItem);
       }
       return result;
     });
-
     var unaccounted = newAllocation.Keys.Aggregate(released, (result, item) =>{
       var dif = newAllocation[item] - oldAllocation[item];
       if(dif <= 0){
         return result;
       }
       if(result.Count == 0) {
-        Debug.LogError("reallocation error state, no released villagers for re-assignment");
+        Debug.LogError("reallocation error state, no released items for re-assignment");
         return result;
       }
       for(int i = 0; i < dif; i++){
-        var villager = result[0];
-        villagersByType[item].Add(villager);
-        villager.SetVillagerType(item);
+        var basisItem = result[0];
+        basis[item].Add(basisItem);
+        onReassign(basisItem, item);
         result.RemoveAt(0);
       }
       return result;

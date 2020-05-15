@@ -17,6 +17,8 @@ public class ConstructionController: MonoBehaviour {
   private VillageController village;
   private ConstructionProject active;
   
+  public event Action<float> OnProgressChange;
+
   public void Init(VillageController village, ForestController forest){
     this.village = village;
     this.forest = forest;
@@ -58,7 +60,7 @@ public class ConstructionController: MonoBehaviour {
       return null;
     }
     active = GameObject.Instantiate(config.prefab).GetComponent<ConstructionProject>();
-    active.Init(projectConfig);
+    active.Init(projectConfig, HandleProjectProgress);
     active.OnComplete += HandleWorkDone;
     active.transform.position = targetLocation;
     return active;
@@ -68,7 +70,12 @@ public class ConstructionController: MonoBehaviour {
     if(active == project){
       active = null;
       village.SpawnHut(project.transform.position);
+      OnProgressChange?.Invoke(0);
     }
+  }
+
+  private void HandleProjectProgress(float value){
+    OnProgressChange?.Invoke(value);
   }
 
   

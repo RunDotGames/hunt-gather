@@ -6,12 +6,6 @@ public class FillBar : MonoBehaviour{
   private int capacity;
   private int value;
 
-  public void Init(int capacity, int value){
-    this.capacity = capacity;
-    this.value = value;
-    UpdateView();
-  }
-
   public void SetCapcity(int capacity){
     this.capacity = capacity;
     UpdateView();
@@ -22,7 +16,7 @@ public class FillBar : MonoBehaviour{
   }
 
   private void UpdateView(){
-    float percent = Mathf.Min(value, capacity) / (float)capacity;
+    float percent = Mathf.Min(value, capacity) / Mathf.Max(capacity, 1.0f);
     fill.anchorMax = new Vector2(fill.anchorMax.x, percent);
   }
 

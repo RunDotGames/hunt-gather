@@ -15,15 +15,23 @@ public class ConstructionProject : MonoBehaviour {
   
   private int currentWork;
   private ConstructionProjectConfig config;
+  private Action<float> onProgressChange;
+  private bool isDone = false;
   
-  public void Init(ConstructionProjectConfig config){
+  public void Init(ConstructionProjectConfig config, Action<float> onProgressChange){
     this.config = config;
+    this.onProgressChange = onProgressChange;
   }
   
   public void ContributeWork(){
+    if(isDone){
+      return;
+    }
     currentWork = currentWork + config.workIncrement;
-    Debug.Log("project is now: " +  (float)currentWork / config.totalWork + " done.");
-    if(currentWork > config.totalWork){
+    float percent = (float)currentWork / config.totalWork;
+    onProgressChange?.Invoke(percent);
+    if(currentWork >= config.totalWork){
+      isDone = true;
       OnComplete?.Invoke(this);
       GameObject.Destroy(gameObject);
     }
@@ -32,6 +40,5 @@ public class ConstructionProject : MonoBehaviour {
   public float GetWorkTime(){
     return config.workTime.GetRangeValue();
   }
-
 
 }

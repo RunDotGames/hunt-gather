@@ -19,7 +19,7 @@ public class Villager : MonoBehaviour, CombatTarget {
   private VillagerType type;
   private bool isDead = false;
   
-  public void Init(VillagerConfig config, VillagerType type, Func<Vector2, CombatTarget> targetProvider){
+  public void Init(VillagerConfig config, VillagerType type){
     colorMap[VillagerType.Gatherer] = config.gatherColor;
     colorMap[VillagerType.Hunter] = config.hunterColor;
     colorMap[VillagerType.Builder] = config.builderColor;

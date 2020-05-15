@@ -250,6 +250,7 @@ GameObject:
   - component: {fileID: 844006077}
   - component: {fileID: 844006079}
   - component: {fileID: 844006080}
+  - component: {fileID: 844006081}
   m_Layer: 0
   m_Name: game-controller
   m_TagString: Untagged
@@ -440,3 +441,22 @@ MonoBehaviour:
     eatTimeRange:
       min: 0.1
       max: 0.3
+--- !u!114 &844006081
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 844006072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfb8a8e1a38d874498e331b02347b540, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  config:
+    tickVariance:
+      min: 0.9
+      max: 1.1
+    timeToTick: 2
+    babyMakingToVillager: 100
+    babyMakingPerTick: 25
