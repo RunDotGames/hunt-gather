@@ -5,6 +5,8 @@ using System.Collections.Generic;
 
 public class BuilderAgent : Agent {
   
+  public event Action<EntityEventType> onEvent;
+
   private enum AgentState {
     Idle, GoToProject, WorkProject, Rest
   }
@@ -23,6 +25,7 @@ public class BuilderAgent : Agent {
   private AgentPather walkPather;
   private ConstructionProject active;
   private SeasonalTimeRange workTime;
+  
 
   public BuilderAgent(AgentConfigCommon config){
     this.config = config;
@@ -71,6 +74,7 @@ public class BuilderAgent : Agent {
     workTime = new SeasonalTimeRange(active.GetWorkTime());
     active.OnComplete += HandleProjectDone;
     state = AgentState.GoToProject;
+    onEvent?.Invoke(EntityEventType.Walk);
   }
 
   
@@ -80,6 +84,7 @@ public class BuilderAgent : Agent {
     }
     state = AgentState.WorkProject;
     workTime.Stop().Resume();
+    onEvent?.Invoke(EntityEventType.Construct);
   }
   
   public void UpdateWorkProject(){
@@ -95,6 +100,7 @@ public class BuilderAgent : Agent {
     }
     config.restRange.Stop();
     state = AgentState.Idle;
+    onEvent?.Invoke(EntityEventType.Idle);
   }
 
   private void HandleProjectDone(ConstructionProject project){
@@ -108,5 +114,6 @@ public class BuilderAgent : Agent {
   private void ReturnToRest(){
     state = AgentState.Rest;
     config.restRange.Resume();
+    onEvent?.Invoke(EntityEventType.Rest);
   }
 }

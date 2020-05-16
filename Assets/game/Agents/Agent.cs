@@ -1,5 +1,6 @@
 
 using UnityEngine;
+using System;
 
 delegate void AgentUpdate();
 
@@ -9,6 +10,7 @@ public interface Agent{
   void Release();
   void Resume();
   int GetAvailability();
+  event Action<EntityEventType> onEvent;
 }
 
 public class AgentConfigCommon {

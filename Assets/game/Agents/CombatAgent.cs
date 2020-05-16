@@ -17,19 +17,21 @@ public class Combatant{
 }
 
 public class CombatAgent: Agent {
+
+  public event Action<EntityEventType> onEvent;
   
   private enum AgentState {
-    Idle, Prowling, Attacking
+    Rest, Prowling, Attacking
   }
   private static Dictionary<AgentState, int> statePriority = new Dictionary<AgentState, int>(){
-    {AgentState.Idle, 0},
+    {AgentState.Rest, 0},
     {AgentState.Prowling, 100},
     {AgentState.Attacking, 200},
   };
 
   private AgentConfigCommon config;
   private Combatant combatant;
-  private AgentState state = AgentState.Idle;
+  private AgentState state = AgentState.Rest;
   private Dictionary<AgentState, AgentUpdate> updates = new Dictionary<AgentState, AgentUpdate>();
   private AgentPather prowlPather;
   private AgentPather attackPather;
@@ -40,10 +42,10 @@ public class CombatAgent: Agent {
   public CombatAgent(AgentConfigCommon config, string name){
     this.name = name;
     this.config = config;
-    updates[AgentState.Idle] = UpdateIdle;
+    updates[AgentState.Rest] = UpdateIdle;
     updates[AgentState.Prowling] = UpdateProwling;
     updates[AgentState.Attacking] = UpdateAttacking;
-    ReturnToIdle();
+    ReturnToRest();
   }
 
   public void ProvideCombatant(Combatant combatant){
@@ -66,6 +68,7 @@ public class CombatAgent: Agent {
     var y = UnityEngine.Random.Range(0, Screen.height);
     prowlTo = (Vector2)Camera.main.ScreenToWorldPoint(new Vector2(x,y));
     state = AgentState.Prowling;
+    onEvent?.Invoke(EntityEventType.Walk);
   }
   
   private void UpdateProwling(){
@@ -77,13 +80,14 @@ public class CombatAgent: Agent {
       return;
     }
     if(prowlPather.ToPoint(prowlTo)){
-      ReturnToIdle();
+      ReturnToRest();
       return;
     }
   }
 
-  private void ReturnToIdle(){
-    state = AgentState.Idle;
+  private void ReturnToRest(){
+    state = AgentState.Rest;
+    onEvent?.Invoke(EntityEventType.Rest);
     config.restRange.Resume();
   }
 
@@ -91,7 +95,7 @@ public class CombatAgent: Agent {
     if(dead == target){
       target.OnDeath -= HandleTargetDead;
       target = null;
-      ReturnToIdle();
+      ReturnToRest();
     }
 
   }
@@ -99,14 +103,15 @@ public class CombatAgent: Agent {
   private void UpdateAttacking(){
     if(attackPather.ToPoint(target.GetBehaviour().transform.position)){
       target.OnDeath -= HandleTargetDead;
-      target.Kill("death by combat");
       Debug.Log(name + " is killing stuff");
-      ReturnToIdle();
+      target.Kill("death by combat");
+      onEvent?.Invoke(EntityEventType.Attack);
+      ReturnToRest();
     }
   }
 
   public bool IsBusy(){
-    return !(state == AgentState.Idle);
+    return !(state == AgentState.Rest);
   }
 
   public void Release(){
@@ -119,7 +124,7 @@ public class CombatAgent: Agent {
   }
 
   public void Resume(){
-    ReturnToIdle();
+    ReturnToRest();
   }
 
   public int GetAvailability(){

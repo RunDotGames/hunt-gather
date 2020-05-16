@@ -3,9 +3,17 @@ using UnityEngine;
 
 public class ForgroundIndexed : MonoBehaviour {
 
-  private ForgroundConfig config;
+  private static ForgroundConfig config;
+  
   public void Start(){
-    config =GameObject.FindObjectOfType<ForgroundConfig>();
+    if(config == null){
+      config =GameObject.FindObjectOfType<ForgroundConfig>();
+      if(config == null){
+        var obj = new GameObject();
+        config = obj.AddComponent<ForgroundConfig>();
+      }
+    }
+    
   }
 
   public void Update(){

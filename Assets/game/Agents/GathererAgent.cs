@@ -11,6 +11,9 @@ public interface HarvestTarget{
 }
 
 public class GathererAgent: Agent {
+
+  public event Action<EntityEventType> onEvent;
+
   private static Dictionary<GathererState, int> statePriority = new Dictionary<GathererState, int>(){
     {GathererState.Idle, 0},
     {GathererState.Rest, 100},
@@ -67,6 +70,7 @@ public class GathererAgent: Agent {
     if(target != null && !(storageCheck?.Invoke() ?? true)){
       harvestTime = new SeasonalTimeRange(target.GetHarvestTime());
       state = GathererState.GoToFood;
+      onEvent?.Invoke(EntityEventType.Walk);
     }
   }
   private void UpdateGoToFood(){
@@ -75,6 +79,7 @@ public class GathererAgent: Agent {
     }
     harvestTime.Resume();
     state = GathererState.GatherFood;
+    onEvent?.Invoke(EntityEventType.Gather);
   }
 
   private void UpdateGatherFood(){
@@ -82,6 +87,7 @@ public class GathererAgent: Agent {
       return;
     }
     state = GathererState.GoToHut;
+    onEvent?.Invoke(EntityEventType.Walk);
     harvestTime.Stop();
     harvestTime = null;
     target.Harvest();
@@ -105,11 +111,13 @@ public class GathererAgent: Agent {
     }
     config.restRange.Stop();
     state = GathererState.Idle;
+    onEvent?.Invoke(EntityEventType.Idle);
   }
 
   private void ReturnToRest(){
     config.restRange.Resume();
     state = GathererState.Rest;
+    onEvent?.Invoke(EntityEventType.Rest);
   }
 
   public bool IsBusy(){

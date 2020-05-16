@@ -63,9 +63,7 @@ public class ForestController : MonoBehaviour {
         while (fruitTrees.Count < fruitTotal) {
             var index = UnityEngine.Random.Range (0, nonFruitTrees.Count);
             var tree = nonFruitTrees[index];
-            nonFruitTrees.RemoveAt(index);
             tree.Init (GetTreeConfig (true));
-            fruitTrees.Add(tree);
         }
         for (int i = 0; i < nonFruitTrees.Count; i++) {
             nonFruitTrees[i].Init (GetTreeConfig (false));

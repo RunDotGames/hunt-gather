@@ -16,6 +16,7 @@ public class Tree : MonoBehaviour, HarvestTarget {
   public Color fruitColor;
   public Color normalColor;
   public SpriteRenderer fruitSprite;
+  public GameObject viewRoot;
   
   private bool hasFruit;
   private TreeConfig config;
@@ -24,6 +25,11 @@ public class Tree : MonoBehaviour, HarvestTarget {
   public delegate void TreeEvent(Tree self);
 
   public void Init(TreeConfig config){
+    var isFlip = UnityEngine.Random.Range(0,2) > 0;
+    if(isFlip) {
+      var scale = viewRoot.transform.localScale;
+      viewRoot.transform.localScale = new Vector3(scale.x * -1, scale.y, scale.z);
+    }
     this.config = config;
     this.ripeRange = new SeasonalTimeRange(config.fruitRange);
     if(config.withFruit){

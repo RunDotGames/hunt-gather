@@ -2,10 +2,13 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using DragonBones;
 
 public class Villager : MonoBehaviour, CombatTarget {
 
+  public List<EntityAnimatorConfig> animConfig;
   public SpriteRenderer sprite;
+  public UnityArmatureComponent armature;
   
   public delegate void VillagerEvent(Villager target);
   public event Action<CombatTarget> OnDeath;
@@ -18,11 +21,21 @@ public class Villager : MonoBehaviour, CombatTarget {
   private VillagerType type;
   private bool isDead = false;
   
+  private EntityAnimator entityAnimator;
+
+
+  public void Start(){
+    if(armature!= null){
+      this.entityAnimator = new EntityAnimator(animConfig, armature);
+    }
+  }
   public void Init(VillagerConfig config, VillagerType type){
     colorMap[VillagerType.Gatherer] = config.gatherColor;
     colorMap[VillagerType.Hunter] = config.hunterColor;
     colorMap[VillagerType.Builder] = config.builderColor;
-    sprite.color = colorMap[type];
+    if(sprite != null){
+      sprite.color = colorMap[type];
+    }
     this.type = type;
     this.config = config;
     agents = new Dictionary<VillagerType, Agent>();
@@ -35,6 +48,9 @@ public class Villager : MonoBehaviour, CombatTarget {
     agents[VillagerType.Gatherer] = new GathererAgent(commonConfig);
     agents[VillagerType.Hunter] = new CombatAgent(commonConfig, "villager");
     agents[VillagerType.Builder] = new BuilderAgent(commonConfig);
+    agents[VillagerType.Gatherer].onEvent += HandleEntityEvent;
+    agents[VillagerType.Hunter].onEvent += HandleEntityEvent;
+    agents[VillagerType.Builder].onEvent += HandleEntityEvent;
   }
 
   public void ProvideFeeder(Func<bool> feeder, Func<bool> storageCheck, Action store, RandomFloatRange feedRange, Func<Vector2, Vector2> storeLocation){
@@ -85,6 +101,15 @@ public class Villager : MonoBehaviour, CombatTarget {
     isDead = true;
     agents[type].Release();
     OnDeath?.Invoke(this);
+    if(sprite){
+      GameObject.Destroy(sprite);
+    }
+    HandleEntityEvent(EntityEventType.Die);
+    StartCoroutine(PlayDeath());
+  }
+
+  private IEnumerator<YieldInstruction> PlayDeath(){
+    yield return new WaitForSeconds(2);
     GameObject.Destroy(gameObject);
   }
 
@@ -94,5 +119,9 @@ public class Villager : MonoBehaviour, CombatTarget {
 
   public MonoBehaviour GetBehaviour(){
     return this;
+  }
+
+  public void HandleEntityEvent(EntityEventType type){
+    entityAnimator?.HandleEvent(type);
   }
 }
