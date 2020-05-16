@@ -20,9 +20,9 @@ public class BuilderAgent : Agent {
   private AgentState state;
   private ConstructionController construction;
   private AgentConfigCommon config;
-  private float nextActionTime;
   private AgentPather walkPather;
   private ConstructionProject active;
+  private SeasonalTimeRange workTime;
 
   public BuilderAgent(AgentConfigCommon config){
     this.config = config;
@@ -49,6 +49,8 @@ public class BuilderAgent : Agent {
       active.OnComplete -= HandleProjectDone;
     }
     active = null;
+    workTime = null;
+    config.restRange.Pause();
   }
 
   public void Resume() {
@@ -62,32 +64,37 @@ public class BuilderAgent : Agent {
   public void UpdateIdle(){
     active = construction.GetActiveProject();
     if(active == null){
+      workTime = null;
       ReturnToRest();
       return;
     }
+    workTime = new SeasonalTimeRange(active.GetWorkTime());
     active.OnComplete += HandleProjectDone;
     state = AgentState.GoToProject;
   }
 
   
   public void UpdateGoToProject(){
-    if(walkPather.ToPoint(active.transform.position)){
-      state = AgentState.WorkProject;
-      nextActionTime = Time.time + active.GetWorkTime();
+    if(!walkPather.ToPoint(active.transform.position)){
+      return;
     }
+    state = AgentState.WorkProject;
+    workTime.Stop().Resume();
   }
   
   public void UpdateWorkProject(){
-    if(Time.time > nextActionTime){
-      nextActionTime = Time.time + active.GetWorkTime();
-      active.ContributeWork();
+    if(!workTime.Update(SeasonTask.Construct)){
+      return;
     }
+    active.ContributeWork();
   }
   
   public void UpdateRest(){
-    if(Time.time < nextActionTime){
-      state = AgentState.Idle;
+    if(!config.restRange.Update(SeasonTask.Rest)){
+      return;
     }
+    config.restRange.Stop();
+    state = AgentState.Idle;
   }
 
   private void HandleProjectDone(ConstructionProject project){
@@ -100,6 +107,6 @@ public class BuilderAgent : Agent {
   
   private void ReturnToRest(){
     state = AgentState.Rest;
-    nextActionTime = Time.time + config.restRange.GetRangeValue();
+    config.restRange.Resume();
   }
 }

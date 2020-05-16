@@ -34,7 +34,6 @@ public class CombatAgent: Agent {
   private AgentPather prowlPather;
   private AgentPather attackPather;
   private Vector2 prowlTo;
-  private float nextProwl;
   private CombatTarget target;
   private string name;
 
@@ -58,14 +57,17 @@ public class CombatAgent: Agent {
   }
 
   private void UpdateIdle(){
-    if(Time.time < nextProwl){
+    if(!config.restRange.Update(SeasonTask.Rest)){
       return;
     }
+
+    config.restRange.Stop();
     var x = UnityEngine.Random.Range(0, Screen.width);
     var y = UnityEngine.Random.Range(0, Screen.height);
     prowlTo = (Vector2)Camera.main.ScreenToWorldPoint(new Vector2(x,y));
     state = AgentState.Prowling;
   }
+  
   private void UpdateProwling(){
     var nearest = combatant.targetProvider(config.transform.position);
     if(nearest != null && (nearest.GetBehaviour().transform.position - config.transform.position).magnitude < combatant.spotDistance){
@@ -82,7 +84,7 @@ public class CombatAgent: Agent {
 
   private void ReturnToIdle(){
     state = AgentState.Idle;
-    nextProwl = Time.time + config.restRange.GetRangeValue();
+    config.restRange.Resume();
   }
 
   private void HandleTargetDead(CombatTarget dead){
@@ -108,6 +110,7 @@ public class CombatAgent: Agent {
   }
 
   public void Release(){
+    config.restRange.Stop();
     if(target == null){
       return;
     }

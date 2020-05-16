@@ -12,9 +12,8 @@ public class Villager : MonoBehaviour, CombatTarget {
 
   private Dictionary<VillagerType, Agent> agents;
   private Dictionary<VillagerType, Color> colorMap = new Dictionary<VillagerType, Color>();
-  private float nextHungry = -1;
   private Func<bool> onHunger;
-  private RandomFloatRange feedRange;
+  private SeasonalTimeRange feedRange;
   private VillagerConfig config;
   private VillagerType type;
   private bool isDead = false;
@@ -29,19 +28,18 @@ public class Villager : MonoBehaviour, CombatTarget {
     agents = new Dictionary<VillagerType, Agent>();
     var commonConfig = new AgentConfigCommon(){
       arrivalDistance = config.arrivalDistance,
-      restRange = config.restRange,
+      restRange = new SeasonalTimeRange(config.restRange),
       transform = this.transform,
       speed = config.speed,
     };
     agents[VillagerType.Gatherer] = new GathererAgent(commonConfig);
     agents[VillagerType.Hunter] = new CombatAgent(commonConfig, "villager");
     agents[VillagerType.Builder] = new BuilderAgent(commonConfig);
-    UpdateHunger(false);
   }
 
   public void ProvideFeeder(Func<bool> feeder, Func<bool> storageCheck, Action store, RandomFloatRange feedRange, Func<Vector2, Vector2> storeLocation){
     this.onHunger = feeder;
-    this.feedRange = feedRange;
+    this.feedRange = new SeasonalTimeRange(feedRange).Resume();
     ((GathererAgent)agents[VillagerType.Gatherer]).ProvideFeeder(storageCheck, store, storeLocation);
   }
 
@@ -64,15 +62,13 @@ public class Villager : MonoBehaviour, CombatTarget {
     agents[this.type].Resume();
   } 
 
-  private void UpdateHunger(bool eat){
-    if(nextHungry < 0 || nextHungry < Time.time) {
-      if(eat){
-        var fed = onHunger?.Invoke() ?? true;
-        if(!fed){
-          Kill("starvation");
-        }
-      }
-      nextHungry = Time.time + feedRange?.GetRangeValue() ?? 0;
+  private void UpdateHunger(){
+    if(feedRange == null || !feedRange.Update(SeasonTask.Eat)) {
+      return;
+    }
+    var fed = onHunger?.Invoke() ?? true;
+    if(!fed){
+      Kill("starvation");
     }
   }
 
@@ -81,7 +77,7 @@ public class Villager : MonoBehaviour, CombatTarget {
       return;
     }
     agents[type]?.Update();
-    UpdateHunger(true);
+    UpdateHunger();
   }
 
   public void Kill(string reason){

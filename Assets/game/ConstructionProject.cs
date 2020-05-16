@@ -37,8 +37,8 @@ public class ConstructionProject : MonoBehaviour {
     }
   }
 
-  public float GetWorkTime(){
-    return config.workTime.GetRangeValue();
+  public RandomFloatRange GetWorkTime(){
+    return config.workTime;
   }
 
 }

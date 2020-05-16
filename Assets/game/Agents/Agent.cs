@@ -15,7 +15,7 @@ public class AgentConfigCommon {
   public float speed;
   public Transform transform;
   public float arrivalDistance;
-  public RandomFloatRange restRange;
+  public SeasonalTimeRange restRange;
 }
 
 public class AgentPather{

@@ -18,18 +18,16 @@ public class Tree : MonoBehaviour, HarvestTarget {
   public SpriteRenderer fruitSprite;
   
   private bool hasFruit;
-  private TreeEvent onFruit;
   private TreeConfig config;
-  private float nextFruitTime;
+  private SeasonalTimeRange ripeRange;
 
   public delegate void TreeEvent(Tree self);
 
   public void Init(TreeConfig config){
     this.config = config;
+    this.ripeRange = new SeasonalTimeRange(config.fruitRange);
     if(config.withFruit){
       MakeFruit();
-    } else {
-      PopNextFruitTime();
     }
   }
   private bool HasFruit(){
@@ -37,23 +35,17 @@ public class Tree : MonoBehaviour, HarvestTarget {
   }
 
   private void MakeFruit(){
+    ripeRange.Stop();
     hasFruit = true;
     fruitSprite.color = fruitColor;
-    onFruit?.Invoke(this);
-  }
-
-  public void Defruit(){
-    
-  }
-
-  private void PopNextFruitTime(){
-    nextFruitTime = Time.time + config.fruitRange.GetRangeValue();
+    config.onFruit?.Invoke(this);
   }
 
   public void Update(){
-    if(!hasFruit && (Time.time > nextFruitTime)){
-      MakeFruit();
+    if(!ripeRange.Update(SeasonTask.Ripen)){
+      return;
     }
+    MakeFruit();
   }
 
   public Vector2 GetPostion() {
@@ -66,12 +58,12 @@ public class Tree : MonoBehaviour, HarvestTarget {
 
   public void Harvest() {
     config.onHarvest(this);
-    PopNextFruitTime();
+    ripeRange.Resume();
     hasFruit = false;
     fruitSprite.color = normalColor;
   }
 
-  public float GetHarvestTime() {
-    return config.harvestRange.GetRangeValue();
+  public RandomFloatRange GetHarvestTime() {
+    return config.harvestRange;
   }
 }

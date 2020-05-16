@@ -89,7 +89,7 @@ public class PredatorController : MonoBehaviour {
       },
       new AgentConfigCommon(){
         arrivalDistance = config.arrivalDistance,
-        restRange = config.idleTime,
+        restRange = new SeasonalTimeRange(config.idleTime),
         speed = config.attackPace,
         transform = predator.transform,
       }

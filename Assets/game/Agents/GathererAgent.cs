@@ -7,7 +7,7 @@ public interface HarvestTarget{
   Vector2 GetPostion();
   void Release();
   void Harvest();
-  float GetHarvestTime();
+  RandomFloatRange GetHarvestTime();
 }
 
 public class GathererAgent: Agent {
@@ -27,7 +27,7 @@ public class GathererAgent: Agent {
 
   private HarvestTarget target;
   private AgentConfigCommon config;
-  private float nextActionTime;
+  private SeasonalTimeRange harvestTime;
   private GathererState state;
   private Dictionary<GathererState, AgentUpdate> updates = new Dictionary<GathererState, AgentUpdate>();
 
@@ -65,22 +65,27 @@ public class GathererAgent: Agent {
   private void UpdateIdle(){
     target = getTarget?.Invoke(config.transform.position) ?? null;
     if(target != null && !(storageCheck?.Invoke() ?? true)){
+      harvestTime = new SeasonalTimeRange(target.GetHarvestTime());
       state = GathererState.GoToFood;
     }
   }
   private void UpdateGoToFood(){
-    if(pather.ToPoint(target.GetPostion())){
-      ReturnToGather();
+    if(!pather.ToPoint(target.GetPostion())){
+      return;
     }
+    harvestTime.Resume();
+    state = GathererState.GatherFood;
   }
 
   private void UpdateGatherFood(){
-    if(Time.time > nextActionTime){
-      state = GathererState.GoToHut;
-      target.Harvest();
-      target = null;
+    if(!harvestTime.Update(SeasonTask.Harvest)){
       return;
     }
+    state = GathererState.GoToHut;
+    harvestTime.Stop();
+    harvestTime = null;
+    target.Harvest();
+    target = null;
   }
 
   private void UpdateGoToHut(){
@@ -94,19 +99,16 @@ public class GathererAgent: Agent {
     }
   }
 
-  public void ReturnToGather(){
-    nextActionTime = Time.time + target.GetHarvestTime();
-    state = GathererState.GatherFood;
-  }
   public void UpdateRest(){
-    if(Time.time > nextActionTime){
-      state = GathererState.Idle;
+    if(!config.restRange.Update(SeasonTask.Rest)){
       return;
     }
+    config.restRange.Stop();
+    state = GathererState.Idle;
   }
 
   private void ReturnToRest(){
-    nextActionTime = Time.time + config.restRange.GetRangeValue();
+    config.restRange.Resume();
     state = GathererState.Rest;
   }
 
@@ -118,6 +120,8 @@ public class GathererAgent: Agent {
     if(target != null) {
       target.Release();
       target = null;
+      harvestTime.Stop();
+      harvestTime = null;
     }
   }
 

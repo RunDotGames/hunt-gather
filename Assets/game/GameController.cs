@@ -22,7 +22,9 @@ public class GameController : MonoBehaviour {
         var constructionController = GameObject.FindObjectOfType<ConstructionController>();
         var predatorController = GameObject.FindObjectOfType<PredatorController>();
         var babiesController = GameObject.FindObjectOfType<BabiesController>();
-        
+        var seasonController = GameObject.FindObjectOfType<SeasonController>();
+
+        seasonController.Init();
         ui.Init(villageController, foodController, babiesController, constructionController);
         foodController.Init(villageController);
         forestController.SpawnForest(villageController);

@@ -56,7 +56,6 @@ public class BabiesController : MonoBehaviour {
     }
     RollNextTick();
     progress = progress + config.babyMakingPerTick;
-    Debug.Log("baby making progress: " + progress);
     if(progress > config.babyMakingToVillager){
       progress = progress % config.babyMakingToVillager;
       village.SpawnVillager();

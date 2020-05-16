@@ -76,8 +76,8 @@ public class ForestController : MonoBehaviour {
         return new TreeConfig () {
             fruitRange = config.fruitRange,
             harvestRange = config.harvestRange,
-            onFruit = HandleTreeFruited,
-            onHarvest = DefruitTree,
+            onFruit = HandleTreeRipe,
+            onHarvest = HandleTreeHarvest,
             onRelease = ReleaseTarget,
             withFruit = withFruit,
         };
@@ -109,7 +109,7 @@ public class ForestController : MonoBehaviour {
         }
     }
 
-    public void DefruitTree (Tree defruited) {
+    public void HandleTreeHarvest (Tree defruited) {
         var targetIndex = targetedTrees.IndexOf (defruited);
         if (targetIndex > -1) {
             targetedTrees.RemoveAt (targetIndex);
@@ -121,7 +121,7 @@ public class ForestController : MonoBehaviour {
         nonFruitTrees.Add (defruited);
     }
 
-    private void HandleTreeFruited (Tree tree) {
+    private void HandleTreeRipe (Tree tree) {
         fruitTrees.Add (tree);
         nonFruitTrees.Remove (tree);
     }
