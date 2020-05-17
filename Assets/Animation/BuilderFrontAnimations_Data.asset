@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94b2d83992acddc4d94ad4edb37e7ffd, type: 3}
+  m_Name: BuilderFrontAnimations_Data
+  m_EditorClassIdentifier: 
+  dataName: BuilderFrontAnimations
+  dragonBonesJSON: {fileID: 4900000, guid: e312bfe0272eee845a5bda1f43865560, type: 3}
+  textureAtlas:
+  - textureAtlasJSON: {fileID: 4900000, guid: b15322feb8eced940b9e2ed3e1f12f3f, type: 3}
+    texture: {fileID: 2800000, guid: 973bd56334ad06b46aee793fd1a63cdd, type: 3}
+    material: {fileID: 2100000, guid: ad741f788634f9f4e942575bf12a1e33, type: 2}
+    uiMaterial: {fileID: 2100000, guid: dbcedee0887e74649ab9143d0b6efbc8, type: 2}
