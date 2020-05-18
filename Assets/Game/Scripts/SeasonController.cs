@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 public enum SeasonTask {
-  Rest, Construct, Harvest, Ripen, Eat,
+  Rest, Construct, Harvest, Ripen, Eat, Babies
 }
 
 [Serializable]

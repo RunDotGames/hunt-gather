@@ -102,6 +102,7 @@ public class PredatorController : MonoBehaviour {
   }
 
   private void HandlePredatorDeath(CombatTarget target){
+    ScoreController.IncrementBearKill();
     var predator = (Predator)target;
     predators.Remove(predator);
   }

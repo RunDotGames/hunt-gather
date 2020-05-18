@@ -106,6 +106,7 @@ public class VillageController: MonoBehaviour {
   }
 
   private void SpawnVillager(VillagerType type, VillageHut hut){
+    ScoreController.IncrementPop();
     var priorAllocation = GetCurrentVillagerAllocation();
     var villager = GameObject.Instantiate(villagerConfig.prefab).GetComponent<Villager>();
     villager.Init(villagerConfig, type);
@@ -118,6 +119,7 @@ public class VillageController: MonoBehaviour {
   }
 
   private void HandleVillagerDeath(CombatTarget target){
+    ScoreController.DecrementPop();
     var villager = (Villager)target;
     var priorAllocation = GetCurrentVillagerAllocation();
     villager.OnDeath -= HandleVillagerDeath;
@@ -203,5 +205,9 @@ public class VillageController: MonoBehaviour {
     if(unaccounted.Count > 0){
       Debug.LogError("reallocation error state, released villagers not reassigned");
     }
+  }
+
+  public int GetVillagerCount(){
+    return villagers.Count;
   }
 }

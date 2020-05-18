@@ -5,13 +5,19 @@ using System;
 public class UiFactor: MonoBehaviour{
   public Text value;
   public SeasonTask task;
-  public RectTransform fillBar;
+  public Image fillBar;
+  public float fillAlpha;
   public bool invert;
+
+  private RectTransform fillTransform;
   
   private SeasonController season;
   
   public void Start(){
     this.season = GameObject.FindObjectOfType<SeasonController>();
+    this.fillTransform = (RectTransform)fillBar.transform;
+    var oldColor = fillBar.color;
+    fillBar.color = new Color(oldColor.r, oldColor.g, oldColor.b, fillAlpha);
   }
 
   public void Update(){
@@ -23,12 +29,12 @@ public class UiFactor: MonoBehaviour{
       return;
     }
     if(value < 0){
-      fillBar.anchorMin = new Vector2(0, 0.5f-height);
-      fillBar.anchorMax = new Vector2(1, 0.5f);
+      fillTransform.anchorMin = new Vector2(0, 0.5f-height);
+      fillTransform.anchorMax = new Vector2(1, 0.5f);
       return;
     }
-    fillBar.anchorMin = new Vector2(0, 0.5f);
-    fillBar.anchorMax = new Vector2(1, 0.5f + height);
+    fillTransform.anchorMin = new Vector2(0, 0.5f);
+    fillTransform.anchorMax = new Vector2(1, 0.5f + height);
   }
   
 }

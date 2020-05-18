@@ -52,12 +52,16 @@ public class AllocSlider : UIBehaviour, IDragHandler, IBeginDragHandler, IEndDra
             return 0;
         }).ToArray();
         for(var i = 0; i < allocations.Length; i++){
+            var labelTransform = labels[i].GetComponent<RectTransform>();
             allocations[i] = (i == handlePositions.Length ? count : handlePositions[i]) - ((i == 0) ? 0 : handlePositions[i-1]);
-            var end = i == handlePositions.Length ? myTransform.rect.width : handles[i].GetComponent<RectTransform>().position.x;
-            var start = (i == 0) ? 0 : handles[i-1].GetComponent<RectTransform>().position.x;
-            var labelX = start +  (end - start)/2;
-            labels[i].transform.position = new Vector3(labelX, labels[i].transform.position.y, labels[i].transform.position.z);
-            labels[i].GetComponent<Text>().text = allocations[i].ToString();
+            var end = i == handlePositions.Length ? 1.0f : handlePositions[i] * increment;
+            var start = i == 0 ? 0 : handlePositions[i-1] * increment; 
+            var anchorX = start +  (end - start)/2;
+            labels[i].SetActive(allocations[i] > 0);
+            labelTransform.anchorMax = new Vector2(anchorX, 0);
+            labelTransform.anchorMin = new Vector2(anchorX, 0);
+            // labels[i].transform.localPosition = new Vector3(labelX, labels[i].transform.position.y, labels[i].transform.position.z);
+            labels[i].GetComponentInChildren<Text>().text = allocations[i].ToString();
         }
     }
 

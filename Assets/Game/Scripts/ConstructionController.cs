@@ -69,7 +69,7 @@ public class ConstructionController: MonoBehaviour {
   private void HandleWorkDone(ConstructionProject project){
     if(active == project){
       active = null;
-      village.SpawnHut(project.transform.position, HutType.Storage);
+      village.SpawnHut(project.transform.position, HutType.Housing);
       OnProgressChange?.Invoke(0);
     }
   }

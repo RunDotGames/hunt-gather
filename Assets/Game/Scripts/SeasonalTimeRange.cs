@@ -52,4 +52,8 @@ public class SeasonalTimeRange{
     thisDuration = duration.GetRangeValue();
     return true;
   }
+
+  public float GetPercent(){
+    return thisDuration > 0 ? elapsed / thisDuration : 0.0f;
+  }
 }
